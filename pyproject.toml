@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "beyn"
+version = "0.1.0"
+description = ""
+authors = ["Peyton Walters <pawalt@hey.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+sounddevice = "^0.4.6"
+PyAudio = "^0.2.13"
+Wave = "^0.0.2"
+keyboard = "^0.13.5"
+pynput = "^1.7.6"
+whispercpp = "^0.0.17"
+numpy = "^1.25.1"
+openai = "^0.27.8"
+python-dotenv = "^1.0.0"
+openai-function-call = "^0.1.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
