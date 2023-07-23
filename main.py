@@ -4,7 +4,7 @@ import openai
 from whispercpp import Whisper
 from dotenv import load_dotenv
 import os
-import utils
+import presentation
 
 load_dotenv()
  
@@ -36,10 +36,6 @@ print("Recipe:")
 for i, step in enumerate(recipe.steps):
     print(f"{i+1}. {step}")
 
-recipe_file = utils.title_to_filename(recipe.recipe_title)
-recipe_file = f"recipes/{recipe_file}"
+presentation.write_recipe_to_hugo(recipe)
 
-with open(recipe_file, 'w') as f:
-    f.write(recipe.json(indent=2))
-
-print(f"Wrote recipe to {recipe_file}")
+print(f"Wrote recipe")

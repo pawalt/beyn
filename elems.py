@@ -16,11 +16,13 @@ class Ingredient(BaseModel):
 class RecipeDetails(OpenAISchema):
     """RecipeDetails are the details describing a recipe. Details are precise and
 reflect the input from the user."""
-    description: str = Field(..., description="description of recipe steps in approximately 200 characters")
+    description: str = Field(..., description="casual description of every recipe step in approximately 200 characters")
     steps: List[str] = Field(..., description="""specific list of all steps in the recipe, in order.
 If multiple steps can be combined into one, they will.""")
-    recipe_title: str = Field(..., description="title of the recipe")
+    recipe_title: str = Field(..., description="title of the recipe in 20 characters or less")
     ingredients: List[Ingredient] = Field(..., description="list of all ingredients in the recipe")
+    total_time: int = Field(..., description="total time in minutes required for this recipe")
+    active_time: int = Field(..., description="total active (non-waiting) cooking time in minutes required for this recipe")
 
 def get_completion(name: str, md: OpenAISchema, transcript: str):
     completion = openai.ChatCompletion.create(
