@@ -28,12 +28,11 @@ active_time = "{{ recipe.active_time }}"
 
 hugo_base_dir = "/Users/peytonwalters/projects/personal-site"
 
-def write_recipe_to_hugo(recipe: elems.RecipeDetails):
+def write_recipe_to_hugo(pathbase: str, recipe: elems.RecipeDetails):
     current_date = date.today()
     formatted_date = current_date.strftime('%Y-%m-%d')
 
-    sanitized_title = sanitize_title(recipe.recipe_title)
-    json_filename = f"{sanitized_title}.json"
+    json_filename = f"{pathbase}.json"
 
     content_template = jinja2.Template(recipe_template)
     content = content_template.render(
@@ -42,7 +41,7 @@ def write_recipe_to_hugo(recipe: elems.RecipeDetails):
         date=formatted_date,
     )
 
-    md_path = os.path.join(hugo_base_dir, "content", "recipes", f"ai_{sanitized_title}.md")
+    md_path = os.path.join(hugo_base_dir, "content", "recipes", f"ai_{pathbase}.md")
     json_path = os.path.join(hugo_base_dir, "data", "recipes", json_filename)
 
     with open(json_path, 'w') as f:
@@ -50,3 +49,27 @@ def write_recipe_to_hugo(recipe: elems.RecipeDetails):
 
     with open(md_path, 'w') as f:
         f.write(content)
+
+machine_readable_recipe_format = """
+Recipe Title: {{ recipe.recipe_title }}
+
+Total time: {{ recipe.total_time }} minutes
+Active time: {{ recipe.active_time }} minutes
+
+Recipe Description: {{ recipe.description }}
+
+Recipe Ingredients:
+{% for item in recipe.ingredients -%}
+- {{ item.quantity }} {{ item.unit }} {{ item.name }}
+{% endfor %}
+Recipe steps:
+{% for step in recipe.steps -%}
+- {{ step }}
+{% endfor %}
+""".strip()
+
+def get_machine_format(recipe: elems.RecipeDetails):
+    content_template = jinja2.Template(machine_readable_recipe_format)
+    return content_template.render(
+        recipe=recipe,
+    )

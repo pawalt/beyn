@@ -1,14 +1,9 @@
-import openai
 from openai_function_call import OpenAISchema
-
 from pydantic import Field, BaseModel
 from typing import List
 
-GPT_3 = "gpt-3.5-turbo-0613"
-GPT_4 = "gpt-4-0613"
-
 class Ingredient(BaseModel):
-    """Ingredient in the recipe. Do not enter anything for fields not specified by the user."""
+    """Ingredient is a representation of one of the ingredients in the recipe."""
     name: str = Field(..., description="Ingredient name")
     unit: str = Field(..., description="abbreviated unit name in standard form, empty if none specified")
     quantity: str = Field(..., description="quantity of ingredients, empty if none specified")
@@ -23,22 +18,3 @@ If multiple steps can be combined into one, they will.""")
     ingredients: List[Ingredient] = Field(..., description="list of all ingredients in the recipe")
     total_time: int = Field(..., description="total time in minutes required for this recipe")
     active_time: int = Field(..., description="total active (non-waiting) cooking time in minutes required for this recipe")
-
-def get_completion(name: str, md: OpenAISchema, transcript: str):
-    completion = openai.ChatCompletion.create(
-            model=GPT_3,
-            temperature=0.7,
-            functions=[md.openai_schema],
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"The user wants information about {name}. Use {name} to parse this info.",
-                },
-                {
-                    "role": "user",
-                    "content": transcript,
-                },
-            ],
-        )
-    ingreds = md.from_response(completion)
-    return ingreds
