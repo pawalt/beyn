@@ -1,4 +1,5 @@
 import listen
+import time
 import elems
 import openai
 from whispercpp import Whisper
@@ -11,12 +12,59 @@ import subprocess
 import re
 import json
 from pydantic.tools import parse_obj_as
+import wave
+import queue
+import threading
 
 load_dotenv()
 
 def get_voice_input(whisp: Whisper) -> str:
-    listen.record_audio()
-    return whisp.transcribe_from_file(listen.RECORDING_FILE)
+    ch = queue.Queue()
+    content_channel = queue.Queue()
+    recorder = listen.Recorder()
+
+    t = threading.Thread(target=listen.record_audio, args=(ch,recorder))
+    worker_thread = threading.Thread(target=worker, args=(ch,content_channel, recorder, whisp))
+
+    t.start()
+    worker_thread.start()
+
+    full_transcript = ""
+    while True:
+        transcript = content_channel.get()
+        if transcript is None:
+            break
+
+        full_transcript += transcript
+        print(transcript, end="", flush=True)
+
+    print()
+
+    t.join()
+    worker_thread.join()
+
+    return full_transcript
+
+def worker(ch, content_channel, recorder, whisp: Whisper):
+    while True:
+        audio_slice = ch.get()
+        if audio_slice is None:  # A sentinel value to exit the loop.
+            content_channel.put(None)
+            break
+
+        fname = f"audiofiles/slice_{time.time()}.wav"
+
+        with wave.open(fname, 'wb') as waveFile:
+            waveFile.setnchannels(recorder.CHANNELS)
+            waveFile.setsampwidth(recorder.audio.get_sample_size(recorder.FORMAT))
+            waveFile.setframerate(recorder.RATE)
+            waveFile.writeframes(audio_slice)
+
+        transcript = whisp.transcribe_from_file(fname)
+        
+        content_channel.put(transcript)
+
+        os.remove(fname)
 
 def parse_recipe(source: str) -> elems.RecipeDetails:
     return llm.get_shema_obj("RecipeDetails", elems.RecipeDetails, source)
@@ -67,7 +115,7 @@ if __name__ == "__main__":
     choice = nice_input("would you like to create a new recipe or modify an existing one? (n/m): ")
     if choice == "n":
         transcription = get_voice_input(w)
-        print(transcription)
+
         recipe = parse_recipe(transcription)
         pathbase = presentation.sanitize_title(recipe.recipe_title)
 
